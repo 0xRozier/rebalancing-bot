@@ -230,15 +230,6 @@ Portfolio après:
 - Use a dedicated wallet for the bot
 - Start with small amounts
 
-### Gas Costs
-- Each rebalancing costs $1-5 in gas
-- Bot only swaps when profitable
-- Monitor gas prices in volatile markets
-
-### Minimum Portfolio Size
-- Recommended: $500+ for optimal efficiency
-- Below $100: gas costs may exceed profits
-
 ### Network
 - Built for **Base network** (low fees)
 - Can be adapted for other EVM chains
