@@ -1,0 +1,76 @@
+# Environment variables (CRITICAL - never commit)
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Logs
+logs/
+*.log
+*.log.*
+combined.log
+error.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Private notes / local scripts
+notes.md
+TODO.md
+private/
+local-test.js
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Cache
+.cache/
+.eslintcache
+.node_repl_history
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Lock files (include package-lock.json but ignore yarn.lock if not using yarn)
+# Uncomment the line below if you want to ignore package-lock.json
+# package-lock.json
