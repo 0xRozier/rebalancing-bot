@@ -48,6 +48,7 @@ Automatically maintains your crypto portfolio at optimal ratios while:
 - Portfolio value updates
 - Error notifications with context
 - Daily summaries
+- Notifications are in french, you have to change them yourself
 
 ### 🧪 **Dry-Run Mode**
 - Test everything without spending a cent
