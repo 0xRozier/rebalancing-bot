@@ -300,19 +300,37 @@ MIT License - Use at your own risk.
 **Price: €179 (one-time payment)**
 
 Payment accepted in:
-- USDC (Base network)
-- ETH (Base network, Ethereum)
+- USDC, ETH (Base network)
+    0x88463bC135e78577c38e7CdA66F092cAF69d4243
+  
 - BTC
+    bc1qpua6ysll7249gua5c5vfvh6llxaefmlx2p04up
 
 ---
+
+Purchase Process :
+
+Send payment to the address above
+
+Contact me :
+Email: rozier.exe@gmail.com
+
+Include in message:
+
+- Transaction ID/hash
+- Your GitHub username
+
+
+Get access within 1-2 hours:
+
+- GitHub repo invitation
+- Welcome message
 
 ## 🚀 Get Started Today
 
 Ready to automate your crypto portfolio?
 
-**[Buy Now - €179]** → [your-payment-link]
-
-Questions? Check the [FAQ](#) or contact me directly.
+Questions? Check the FAQ or contact me directly.
 
 ---
 
