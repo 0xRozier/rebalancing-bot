@@ -1,7 +1,7 @@
 {
   "name": "crypto-rebalancing-bot",
-  "version": "2.0.0",
-  "description": "Bot automatique de rebalancing crypto avec yield farming et protections avancées",
+  "version": "1.0.0",
+  "description": "Professional crypto portfolio rebalancing with circuit breakers and yield farming",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -21,7 +21,7 @@
     "base",
     "ethereum"
   ],
-  "author": "Votre Nom",
+  "author": "0xRozier",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
