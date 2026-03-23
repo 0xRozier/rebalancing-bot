@@ -286,16 +286,6 @@ MIT License - Use at your own risk.
 
 ---
 
-This project is free and open-source, so if you want to thank me you can make a donation :
-
-- USDC, ETH (Base network)
-    0x88463bC135e78577c38e7CdA66F092cAF69d4243
-  
-- USD, ETH (Ethereum Mainnet)
-    0x88463bC135e78577c38e7CdA66F092cAF69d4243
-  
-- BTC
-    bc1qpua6ysll7249gua5c5vfvh6llxaefmlx2p04up
-
+This project is free and open-source
 
 *Built with ❤️ for crypto traders who value their time.*
