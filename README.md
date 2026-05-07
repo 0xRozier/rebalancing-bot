@@ -269,14 +269,6 @@ Portfolio après:
 
 ---
 
-## 🤝 Support
-
-**Issues or questions?** 
-
-Contact via:
-- Email: rozier.exe@gmail.com
-
----
 
 ## 📜 License
 
