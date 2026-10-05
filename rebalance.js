@@ -7,6 +7,7 @@ import { sendTelegramMessage } from "./notifier.js";
 import { executeCircuitBreakers } from "./breaker.js";
 import { optimizeUSDCAllocation, depositToAave, withdrawFromAave } from "./yield.js";
 import { getDynamicThreshold } from "./prices.js";
+import { recordSnapshot, recordTrade } from "./pnl.js";
 import {
   log,
   formatUSD,
@@ -223,6 +224,8 @@ export async function rebalance(prices) {
     if (!healthReport.needsRebalancing) {
       log('SUCCESS', '✅ Portfolio équilibré, pas de rebalancing nécessaire');
 
+      recordSnapshot(balances, prices, false);
+
       // Optimiser l'allocation USDC sur Aave même sans rebalancing
       if (BOT_CONFIG.ENABLE_YIELD_FARMING) {
         log('INFO', '\n💰 Vérification du yield USDC...');
@@ -367,6 +370,15 @@ export async function rebalance(prices) {
           dryRun: swapResult.dryRun || false
         });
 
+        recordTrade({
+          from: plannedSwap.from,
+          to: plannedSwap.to,
+          amountUSD: safeAmountUSD,
+          txHash: swapResult.hash,
+          gasCostUSD: swapResult.gasCost || 0,
+          dryRun: swapResult.dryRun || false,
+        });
+
         // Mettre à jour balances locales
         localBalances[plannedSwap.from] -= safeAmountToken;
         localBalances[plannedSwap.to] += (safeAmountToken * prices[plannedSwap.from]) / prices[plannedSwap.to];
@@ -391,6 +403,8 @@ export async function rebalance(prices) {
     clearBalanceCache();
     const updatedBalances = await getBalances();
     const updatedTotalValue = getPortfolioValue(updatedBalances, prices);
+
+    recordSnapshot(updatedBalances, prices, true);
 
     // 10. Optimiser l'allocation USDC après rebalancing
     if (BOT_CONFIG.ENABLE_YIELD_FARMING && swaps.length > 0) {

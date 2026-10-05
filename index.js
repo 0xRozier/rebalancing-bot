@@ -11,13 +11,44 @@ import { validateConfig, BOT_CONFIG, TARGET_RATIOS } from "./config.js";
 import { sendTelegramMessage } from "./notifier.js";
 import { getBalances } from "./balances.js";
 import { resetCircuitBreakers } from "./breaker.js";
+import { initPnl } from "./pnl.js";
+import { startTelegramBot, stopTelegramBot } from "./telegram.js";
 
 // Flag pour éviter les exécutions concurrentes
 let isRunning = false;
 let consecutiveErrors = 0;
 const MAX_CONSECUTIVE_ERRORS = 3;
 
+// Références aux tâches cron pour pause/reprise
+let rebalanceTask = null;
+let emergencyTask = null;
+
 global.hasRetriedRPC = false;
+
+/**
+ * Pause les tâches cron
+ */
+function pauseCronJobs() {
+  if (rebalanceTask) rebalanceTask.stop();
+  if (emergencyTask) emergencyTask.stop();
+  log('INFO', '⏸ Tâches cron mises en pause');
+}
+
+/**
+ * Reprend les tâches cron
+ */
+function resumeCronJobs() {
+  if (rebalanceTask) rebalanceTask.start();
+  if (emergencyTask) emergencyTask.start();
+  log('INFO', '▶️ Tâches cron reprises');
+}
+
+/**
+ * Force un rebalancing immédiat
+ */
+async function forceRebalancing() {
+  await runRebalancing();
+}
 
 /**
  * Fonction principale de rebalancing
@@ -74,58 +105,58 @@ async function runRebalancing() {
  * Gère les erreurs de rebalancing avec retry intelligent
  */
 async function handleRebalancingError(error) {
-  const isRPCError = 
+  const isRPCError =
     error.message?.includes('Balances manquantes') ||
     error.message?.includes('missing revert data') ||
     error.message?.includes('CALL_EXCEPTION') ||
     error.code === 'CALL_EXCEPTION' ||
     error.code === 'UNKNOWN_ERROR';
-  
+
   if (isRPCError && !global.hasRetriedRPC) {
     log('WARN', '⚠️ Erreur RPC détectée, retry dans 3 minutes...');
-    
+
     await sendTelegramMessage(
       `⚠️ Rebalancing échoué (RPC instable)\n\n` +
       `Le bot va réessayer dans 3 minutes avec d'autres RPC.`
     );
-    
+
     global.hasRetriedRPC = true;
-    
+
     // Attendre 3 minutes
     await new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000));
-    
+
     log('INFO', '🔄 Retry du rebalancing après erreur RPC...');
-    
+
     try {
       // Forcer rotation RPC
       const { rotateToNextRPC } = await import('./rpc_manager.js');
       rotateToNextRPC();
-      
+
       // Clear tous les caches
       const { clearBalanceCache } = await import('./balances.js');
       const { clearPriceCache } = await import('./prices.js');
       clearBalanceCache();
       clearPriceCache();
-      
+
       // Retry
       const newPrices = await getPrices(false); // Sans cache
       if (!newPrices) {
         throw new Error('Impossible de récupérer les prix après retry');
       }
-      
+
       await rebalance(newPrices);
-      
+
       log('SUCCESS', '✅ Retry réussi après erreur RPC !');
       consecutiveErrors = 0;
       global.hasRetriedRPC = false;
-      
+
       await sendTelegramMessage('✅ Retry réussi après erreur RPC !');
-      
+
     } catch (retryError) {
       log('ERROR', `❌ Retry échoué: ${retryError.message}`);
       global.hasRetriedRPC = false;
       consecutiveErrors++;
-      
+
       await sendTelegramMessage(
         `❌ Retry échoué après erreur RPC\n\n` +
         `Erreur: ${retryError.message}\n\n` +
@@ -163,7 +194,7 @@ async function runEmergencyCheck() {
     const missingBalances = Object.entries(balances)
       .filter(([symbol, balance]) => balance === 0 && TARGET_RATIOS[symbol])
       .map(([symbol]) => symbol);
-    
+
     if (missingBalances.length > 0) {
       log('WARN', `⚠️ Emergency check: balances manquantes (${missingBalances.join(', ')}), skip`);
       return; // Ne pas déclencher d'urgence avec des balances fausses !
@@ -202,6 +233,10 @@ async function initialize() {
     // Validation de la configuration
     log('INFO', '2️⃣  Validation de la configuration...');
     validateConfig();
+
+    // Initialisation du PnL
+    log('INFO', '📊 Initialisation du suivi PnL...');
+    initPnl();
 
     // Mode dry-run
     if (BOT_CONFIG.DRY_RUN) {
@@ -285,6 +320,7 @@ function setupGracefulShutdown() {
       }
     }
 
+    stopTelegramBot();
     await sendTelegramMessage('🛑 Bot arrêté');
     log('SUCCESS', '✅ Arrêt propre du bot');
     process.exit(0);
@@ -312,12 +348,20 @@ async function main() {
     // Planifier les rebalancing réguliers
     const rebalanceCron = `0 */${BOT_CONFIG.REBALANCE_INTERVAL_HOURS} * * *`;
     log('INFO', `📅 Planification: rebalancing toutes les ${BOT_CONFIG.REBALANCE_INTERVAL_HOURS}h`);
-    cron.schedule(rebalanceCron, runRebalancing);
+    rebalanceTask = cron.schedule(rebalanceCron, runRebalancing);
 
     // Planifier les checks d'urgence
     const emergencyCron = `*/${BOT_CONFIG.EMERGENCY_CHECK_INTERVAL_MINUTES} * * * *`;
     log('INFO', `📅 Planification: check d'urgence toutes les ${BOT_CONFIG.EMERGENCY_CHECK_INTERVAL_MINUTES} min\n`);
-    cron.schedule(emergencyCron, runEmergencyCheck);
+    emergencyTask = cron.schedule(emergencyCron, runEmergencyCheck);
+
+    // Démarrer le bot Telegram
+    startTelegramBot({
+      onStop: pauseCronJobs,
+      onStart: resumeCronJobs,
+      onForceRebalance: forceRebalancing,
+      getIsRunning: () => isRunning,
+    });
 
     log('SUCCESS', '🎯 Bot en cours d\'exécution...\n');
 

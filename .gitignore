@@ -30,6 +30,9 @@ logs/
 combined.log
 error.log
 
+# PnL data
+data/
+
 # Runtime data
 pids/
 *.pid
